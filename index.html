@@ -2,6 +2,7 @@
 <head>
   <title>PneuFlu</title>
   <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
   <script src="data_2015.js"></script>
 </head>
 <body>
@@ -16,6 +17,7 @@
       .classed("graph",true)
       .attr("width", width)
       .attr("height", height);
+
     var yAxis = d3.scale.linear()
                         .domain(d3.extent(boston_data, function(datum) {
                           return Number(datum.all_causes_by_age_years_all_ages);
@@ -34,7 +36,6 @@
              return xAxis(Number(datum.mmwr_week));
            })
            .attr('cy', function(datum) {
-             console.log(datum.all_causes_by_age_years_all_ages, xAxis(datum.all_causes_by_age_years_all_ages));
              return yAxis(Number(datum.all_causes_by_age_years_all_ages));
            })
            .attr('r', 5);
