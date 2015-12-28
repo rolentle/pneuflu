@@ -2,7 +2,42 @@
 <head>
   <title>PneuFlu</title>
   <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+  <script src="data_2015.js"></script>
 </head>
 <body>
+  <script>
+    var boston_data = data_2015.filter(function(datum) {
+      return datum.reporting_area === "Boston, MA"
+    })
+    var width = 800;
+    var height = 600;;
+    d3.select("body")
+      .append("svg")
+      .classed("graph",true)
+      .attr("width", width)
+      .attr("height", height);
+    var yAxis = d3.scale.linear()
+                        .domain(d3.extent(boston_data, function(datum) {
+                          return Number(datum.all_causes_by_age_years_all_ages);
+                        }))
+                        .range([height, 0]);
+    var xAxis = d3.scale.linear()
+                        .domain(d3.extent(boston_data, function(datum) {
+                          return Number(datum.mmwr_week);
+                        }))
+                        .range([0, width]);
+    var circles = d3.select(".graph").selectAll("circle");
+    circles.data(boston_data)
+           .enter()
+           .append('circle')
+           .attr('cx', function(datum) {
+             return xAxis(Number(datum.mmwr_week));
+           })
+           .attr('cy', function(datum) {
+             console.log(datum.all_causes_by_age_years_all_ages, xAxis(datum.all_causes_by_age_years_all_ages));
+             return yAxis(Number(datum.all_causes_by_age_years_all_ages));
+           })
+           .attr('r', 5);
+  </script>
 </body>
 </html>
