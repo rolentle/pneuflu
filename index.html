@@ -7,7 +7,8 @@
   <script src="datamaps.usa.min.js"></script>
 </head>
 <body>
-  <h1>Deaths due to Pneumonia or Influenza</h1>
+  <h1>Pneumonia or Influenza Deaths in the 122 Largest Cities For 2014</h1>
+  <h2 id="week_title"></h2>
   <div id="container" style="position: relative; width: 1000px; height: 600px;"></div>
   <script>
     var map = new Datamap({
@@ -50,32 +51,36 @@
           return datum.fill;
         });
     };
+    
+    var setTitle = function(week_number) {
+      d3.select("#week_title").text("Week " + week_number);
+    };
 
     var buildSelector = function(data_set, datamap, scale) {
-      var select = d3.select("#container").append("select")
+      var range_select = d3.select("#container").append("input")
+                                          .attr("type", "range")
                                           .attr("id", "week_number");
-      var weeks = d3.set(data_set.map(function(datum) {
-        return datum.mmwr_week;
-      })).values();
-      console.log(weeks);
-      var options = select.selectAll("option").data(weeks);
-      options.enter()
-             .append("option")
-             .attr("value", function(datum) { return datum })
-             .text(function(datum) { return "Week " + datum });
-     select.on("change", function() {
-       var week_number = Number(this.value);
-       var weekly_data = data_set.filter(function(datum) {
-       return (Number(datum.mmwr_week) === week_number) && 
-         !datum.all_causes_by_age_years_lt_1_flag;
+      var weeks = d3.extent(data_set.map(function(datum) {
+        return Number(datum.mmwr_week);
+      }));
+      range_select.attr("min", weeks[0]).attr("max", weeks[1]).attr("value", weeks[0]);
+      range_select.on("change", function() {
+        var week_number = Number(this.value);
+        var weekly_data = data_set.filter(function(datum) {
+          return (Number(datum.mmwr_week) === week_number) && 
+            !datum.all_causes_by_age_years_lt_1_flag;
+        });
+        setTitle(week_number);
+        setBubbles(datamap, weekly_data, scale);
        });
-       setBubbles(datamap, weekly_data, scale);
-     });
     };
 
     var data_for_cities = function(data_set) {
       return data_set.filter(function(datum) {
-        return datum.reporting_area.indexOf(",") !== -1
+        return datum.reporting_area.indexOf(",") !== -1 &&
+          datum.location_1 &&
+          datum.location_1.longitude &&
+          datum.location_1.latitude
       });
     };
 
@@ -83,14 +88,16 @@
        city_data = data_for_cities(data);
        var bubbleScale = d3.scale.linear()
                                  .domain(d3.extent(city_data, function(datum) {
-                                           return Number(datum.all_causes_by_age_years_all_ages);
+                                           return datum.all_causes_by_age_years_all_ages;
                                  }))
                                  .range(["white", "red"]);
+      var default_week_number = 1;
       var week_1_data = city_data.filter(function(datum) {
-        return (Number(datum.mmwr_week) === 1) &&
+        return (Number(datum.mmwr_week) === default_week_number) &&
           !datum.all_causes_by_age_years_lt_1_flag;
       });
 
+      setTitle(default_week_number);
       setBubbles(map, week_1_data, bubbleScale);
       buildSelector(city_data, map, bubbleScale);
     });
