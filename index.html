@@ -5,6 +5,9 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
   <script src="data_2015.js"></script>
   <script src="datamaps.usa.min.js"></script>
+  <script src="lib/bubble_builder.js"></script>
+  <script src="lib/element_builder.js"></script>
+  <script src="lib/data_formatter.js"></script>
 </head>
 <body>
   <h1>Pneumonia or Influenza Deaths in the 122 Largest Cities For 2014</h1>
@@ -16,74 +19,6 @@
       scope: 'usa'
     });
 
-    var setBubbles = function(datamap, data, scale) {
-      var bubble_data = data.map(function(datum) {
-        var bubble = {
-          longitude: datum.location_1.longitude,
-          latitude: datum.location_1.latitude,
-          reporting_area: datum.reporting_area,
-          radius: 10,
-          all_causes_by_age_years_lt_1 : datum.all_causes_by_age_years_lt_1,
-          all_causes_by_age_years_1_24 : datum.all_causes_by_age_years_1_24,
-          all_causes_by_age_years_25_44 : datum.all_causes_by_age_years_25_44,
-          all_causes_by_age_years_45_64 : datum.all_causes_by_age_years_45_64,
-          all_causes_by_age_years_65 : datum.all_causes_by_age_years_65,
-          all_causes_by_age_years_all_ages : datum.all_causes_by_age_years_all_ages,
-          fill: scale(datum.all_causes_by_age_years_all_ages)
-        }
-        return bubble;
-      });
-      datamap.bubbles(bubble_data,{
-        popupTemplate: function (geo, datum) {
-                    return ['<div class="hoverinfo">' +  datum.reporting_area,
-                    '<br/>Deaths under 1 years old: ' +  datum.all_causes_by_age_years_lt_1,
-                    '<br/>Deaths between 1 and 24: ' +  datum.all_causes_by_age_years_1_24,
-                    '<br/>Deaths between 25 and 44: ' +  datum.all_causes_by_age_years_25_44,
-                    '<br/>Deaths between 45 and 64: ' +  datum.all_causes_by_age_years_45_64,
-                    '<br/>Deaths over 65 years old: ' +  datum.all_causes_by_age_years_65,
-                    '<br/>Total deaths: ' +  datum.all_causes_by_age_years_all_ages,
-                    '</div>'].join('');
-        }
-      });
-      d3.selectAll("circle.datamaps-bubble")
-        .style({fill: ''})
-        .attr("fill", function(datum) {
-          return datum.fill;
-        });
-    };
-    
-    var setTitle = function(week_number) {
-      d3.select("#week_title").text("Week " + week_number);
-    };
-
-    var buildSelector = function(data_set, datamap, scale) {
-      var range_select = d3.select("#container").append("input")
-                                          .attr("type", "range")
-                                          .attr("id", "week_number");
-      var weeks = d3.extent(data_set.map(function(datum) {
-        return Number(datum.mmwr_week);
-      }));
-      range_select.attr("min", weeks[0]).attr("max", weeks[1]).attr("value", weeks[0]);
-      range_select.on("change", function() {
-        var week_number = Number(this.value);
-        var weekly_data = data_set.filter(function(datum) {
-          return (Number(datum.mmwr_week) === week_number) && 
-            !datum.all_causes_by_age_years_lt_1_flag;
-        });
-        setTitle(week_number);
-        setBubbles(datamap, weekly_data, scale);
-       });
-    };
-
-    var data_for_cities = function(data_set) {
-      return data_set.filter(function(datum) {
-        return datum.reporting_area.indexOf(",") !== -1 &&
-          datum.location_1 &&
-          datum.location_1.longitude &&
-          datum.location_1.latitude
-      });
-    };
-
     d3.json('./data_2014.json',function(data){
        city_data = data_for_cities(data);
        var bubbleScale = d3.scale.linear()
@@ -92,11 +27,7 @@
                                  }))
                                  .range(["white", "red"]);
       var default_week_number = 1;
-      var week_1_data = city_data.filter(function(datum) {
-        return (Number(datum.mmwr_week) === default_week_number) &&
-          !datum.all_causes_by_age_years_lt_1_flag;
-      });
-
+      var week_1_data = filter_by_week(city_data, default_week_number);
       setTitle(default_week_number);
       setBubbles(map, week_1_data, bubbleScale);
       buildSelector(city_data, map, bubbleScale);
