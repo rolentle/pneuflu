@@ -7,40 +7,9 @@
   <script src="datamaps.usa.min.js"></script>
 </head>
 <body>
+  <h1>
   <div id="container" style="position: relative; width: 1000px; height: 600px;"></div>
   <script>
-    var boston_data = data_2015.filter(function(datum) {
-      return datum.reporting_area === "Boston, MA"
-    })
-    var width = 800;
-    var height = 600;;
-    d3.select("body")
-      .append("svg")
-      .classed("graph",true)
-      .attr("width", width)
-      .attr("height", height);
-
-    var yAxis = d3.scale.linear()
-                        .domain(d3.extent(boston_data, function(datum) {
-                          return Number(datum.all_causes_by_age_years_all_ages);
-                        }))
-                        .range([height, 0]);
-    var xAxis = d3.scale.linear()
-                        .domain(d3.extent(boston_data, function(datum) {
-                          return Number(datum.mmwr_week);
-                        }))
-                        .range([0, width]);
-    var circles = d3.select(".graph").selectAll("circle");
-    circles.data(boston_data)
-           .enter()
-           .append('circle')
-           .attr('cx', function(datum) {
-             return xAxis(Number(datum.mmwr_week));
-           })
-           .attr('cy', function(datum) {
-             return yAxis(Number(datum.all_causes_by_age_years_all_ages));
-           })
-           .attr('r', 5);
     var week_1_data = data_2015.filter(function(datum) {
       return (Number(datum.mmwr_week) === 1) && 
         datum.reporting_area.indexOf(",") !== -1 &&
@@ -54,43 +23,72 @@
                              .range(["white", "red"]);
 
 
-    var bubble_data = week_1_data.map(function(datum) {
-      var bubble = {
-        longitude: datum.location_1.longitude,
-        latitude: datum.location_1.latitude,
-        reporting_area: datum.reporting_area,
-        radius: 10,
-        all_causes_by_age_years_lt_1 : datum.all_causes_by_age_years_lt_1,
-        all_causes_by_age_years_1_24 : datum.all_causes_by_age_years_1_24,
-        all_causes_by_age_years_25_44 : datum.all_causes_by_age_years_25_44,
-        all_causes_by_age_years_45_64 : datum.all_causes_by_age_years_45_64,
-        all_causes_by_age_years_65 : datum.all_causes_by_age_years_65,
-        all_causes_by_age_years_all_ages : datum.all_causes_by_age_years_all_ages,
-        fill: bubbleScale(datum.all_causes_by_age_years_all_ages)
-      }
-      return bubble;
-    });
     var map = new Datamap({
       element: document.getElementById('container'),
       scope: 'usa'
     });
-    map.bubbles(bubble_data,{
-    popupTemplate: function (geo, data) {
-                return ['<div class="hoverinfo">' +  data.reporting_area,
-                '<br/>Deaths under 1 years old: ' +  data.all_causes_by_age_years_lt_1,
-                '<br/>Deaths between 1 and 24: ' +  data.all_causes_by_age_years_1_24,
-                '<br/>Deaths between 25 and 44: ' +  data.all_causes_by_age_years_25_44,
-                '<br/>Deaths between 45 and 64: ' +  data.all_causes_by_age_years_45_64,
-                '<br/>Deaths over 65 years old: ' +  data.all_causes_by_age_years_65,
-                '<br/>Total deaths: ' +  data.all_causes_by_age_years_all_ages,
-                '</div>'].join('');
-    }
-    });
-    d3.selectAll("circle.datamaps-bubble")
-      .style({fill: ''})
-      .attr("fill", function(datum) {
-        return datum.fill;
+    var setBubbles = function(datamap, data) {
+      var bubble_data = data.map(function(datum) {
+        var bubble = {
+          longitude: datum.location_1.longitude,
+          latitude: datum.location_1.latitude,
+          reporting_area: datum.reporting_area,
+          radius: 10,
+          all_causes_by_age_years_lt_1 : datum.all_causes_by_age_years_lt_1,
+          all_causes_by_age_years_1_24 : datum.all_causes_by_age_years_1_24,
+          all_causes_by_age_years_25_44 : datum.all_causes_by_age_years_25_44,
+          all_causes_by_age_years_45_64 : datum.all_causes_by_age_years_45_64,
+          all_causes_by_age_years_65 : datum.all_causes_by_age_years_65,
+          all_causes_by_age_years_all_ages : datum.all_causes_by_age_years_all_ages,
+          fill: bubbleScale(datum.all_causes_by_age_years_all_ages)
+        }
+        return bubble;
       });
+      datamap.bubbles(bubble_data,{
+        popupTemplate: function (geo, datum) {
+                    return ['<div class="hoverinfo">' +  datum.reporting_area,
+                    '<br/>Deaths under 1 years old: ' +  datum.all_causes_by_age_years_lt_1,
+                    '<br/>Deaths between 1 and 24: ' +  datum.all_causes_by_age_years_1_24,
+                    '<br/>Deaths between 25 and 44: ' +  datum.all_causes_by_age_years_25_44,
+                    '<br/>Deaths between 45 and 64: ' +  datum.all_causes_by_age_years_45_64,
+                    '<br/>Deaths over 65 years old: ' +  datum.all_causes_by_age_years_65,
+                    '<br/>Total deaths: ' +  datum.all_causes_by_age_years_all_ages,
+                    '</div>'].join('');
+        }
+      });
+      d3.selectAll("circle.datamaps-bubble")
+        .style({fill: ''})
+        .attr("fill", function(datum) {
+          return datum.fill;
+        });
+    };
+
+
+    var buildSelector = function(data_set, datamap) {
+      var select = d3.select("#container").append("select")
+                                          .attr("id", "week_number");
+      var weeks = d3.set(data_set.map(function(datum) {
+        return datum.mmwr_week;
+      })).values();
+      var options = select.selectAll("option").data(weeks);
+      options.enter()
+             .append("option")
+             .attr("value", function(datum) { return datum })
+             .text(function(datum) { return "Week " + datum });
+     select.on("change", function() {
+       var week_number = Number(this.value);
+       var weekly_data = data_2015.filter(function(datum) {
+       return (Number(datum.mmwr_week) === week_number) && 
+         datum.reporting_area.indexOf(",") !== -1 &&
+         !datum.all_causes_by_age_years_lt_1_flag;
+       });
+       console.log(weekly_data);
+       setBubbles(datamap,weekly_data);
+     });
+    };
+
+    setBubbles(map, week_1_data);
+    buildSelector(data_2015, map);
   </script>
 </body>
 </html>
