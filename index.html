@@ -7,27 +7,15 @@
   <script src="datamaps.usa.min.js"></script>
 </head>
 <body>
-  <h1>
+  <h1>Deaths due to Pneumonia or Influenza</h1>
   <div id="container" style="position: relative; width: 1000px; height: 600px;"></div>
   <script>
-    var week_1_data = data_2015.filter(function(datum) {
-      return (Number(datum.mmwr_week) === 1) && 
-        datum.reporting_area.indexOf(",") !== -1 &&
-        !datum.all_causes_by_age_years_lt_1_flag;
-    });
-
-   var bubbleScale = d3.scale.linear()
-                             .domain(d3.extent(week_1_data, function(datum) {
-                                       return Number(datum.all_causes_by_age_years_all_ages);
-                             }))
-                             .range(["white", "red"]);
-
-
     var map = new Datamap({
       element: document.getElementById('container'),
       scope: 'usa'
     });
-    var setBubbles = function(datamap, data) {
+
+    var setBubbles = function(datamap, data, scale) {
       var bubble_data = data.map(function(datum) {
         var bubble = {
           longitude: datum.location_1.longitude,
@@ -40,7 +28,7 @@
           all_causes_by_age_years_45_64 : datum.all_causes_by_age_years_45_64,
           all_causes_by_age_years_65 : datum.all_causes_by_age_years_65,
           all_causes_by_age_years_all_ages : datum.all_causes_by_age_years_all_ages,
-          fill: bubbleScale(datum.all_causes_by_age_years_all_ages)
+          fill: scale(datum.all_causes_by_age_years_all_ages)
         }
         return bubble;
       });
@@ -63,13 +51,13 @@
         });
     };
 
-
-    var buildSelector = function(data_set, datamap) {
+    var buildSelector = function(data_set, datamap, scale) {
       var select = d3.select("#container").append("select")
                                           .attr("id", "week_number");
       var weeks = d3.set(data_set.map(function(datum) {
         return datum.mmwr_week;
       })).values();
+      console.log(weeks);
       var options = select.selectAll("option").data(weeks);
       options.enter()
              .append("option")
@@ -77,18 +65,35 @@
              .text(function(datum) { return "Week " + datum });
      select.on("change", function() {
        var week_number = Number(this.value);
-       var weekly_data = data_2015.filter(function(datum) {
+       var weekly_data = data_set.filter(function(datum) {
        return (Number(datum.mmwr_week) === week_number) && 
-         datum.reporting_area.indexOf(",") !== -1 &&
          !datum.all_causes_by_age_years_lt_1_flag;
        });
-       console.log(weekly_data);
-       setBubbles(datamap,weekly_data);
+       setBubbles(datamap, weekly_data, scale);
      });
     };
 
-    setBubbles(map, week_1_data);
-    buildSelector(data_2015, map);
+    var data_for_cities = function(data_set) {
+      return data_set.filter(function(datum) {
+        return datum.reporting_area.indexOf(",") !== -1
+      });
+    };
+
+    d3.json('./data_2014.json',function(data){
+       city_data = data_for_cities(data);
+       var bubbleScale = d3.scale.linear()
+                                 .domain(d3.extent(city_data, function(datum) {
+                                           return Number(datum.all_causes_by_age_years_all_ages);
+                                 }))
+                                 .range(["white", "red"]);
+      var week_1_data = city_data.filter(function(datum) {
+        return (Number(datum.mmwr_week) === 1) &&
+          !datum.all_causes_by_age_years_lt_1_flag;
+      });
+
+      setBubbles(map, week_1_data, bubbleScale);
+      buildSelector(city_data, map, bubbleScale);
+    });
   </script>
 </body>
 </html>
