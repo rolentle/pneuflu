@@ -26,7 +26,7 @@
         var death_min = deaths_extent[0];
         var death_max = deaths_extent[1];
         var death_mid = Math.round((death_max + death_min) / 22);
-        fills_properties = {}
+        var fills_properties = {};
         fills_properties[death_min] = bubbleScale(death_min);
         fills_properties[death_mid] = bubbleScale(death_mid);
         fills_properties[death_max] = bubbleScale(death_max);
@@ -38,16 +38,17 @@
 
         var default_week_number = 1;
         var week_1_data = fluData2014.by_city_and_week_of(default_week_number);
-        setTitle(default_week_number);
+        setTitle(default_week_number, fluData2014);
         setBubbles(map, week_1_data, bubbleScale);
         buildSelector(fluData2014, map, bubbleScale);
-        fills_properties = {}
-        fills_properties[death_min] = death_min;
-        fills_properties[death_mid] = death_mid;
-        fills_properties[death_max] = death_max;
+
+        var legend_properties = {};
+        legend_properties[death_min] = death_min;
+        legend_properties[death_mid] = death_mid;
+        legend_properties[death_max] = death_max;
         map.legend({
           legendTitle: "Total Deaths", 
-          labels: fills_properties
+          labels: legend_properties
         });
       });
     </script>
