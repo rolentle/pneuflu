@@ -6,7 +6,7 @@
     <script src="datamaps.usa.min.js"></script>
     <script src="lib/bubble_builder.js"></script>
     <script src="lib/element_builder.js"></script>
-    <script src="lib/data_formatter.js"></script>
+    <script src="lib/flu_data.js"></script>
   </head>
   <body>
     <h1>Pneumonia or Influenza Deaths in the 122 Largest Cities For 2014</h1>
@@ -17,39 +17,42 @@
 
       d3.json('./data_2014.json',function(data){
         var fluData2014 = new fluData(data);
-        var deaths_extent = fluData2014.death_extent_of_cities();
+        var deathsExtent = fluData2014.deathExtentOfCities();
 
         var bubbleScale = d3.scale.linear()
-          .domain(deaths_extent)
+          .domain(deathsExtent)
           .range(["white", "red"]);
 
-        var death_min = deaths_extent[0];
-        var death_max = deaths_extent[1];
-        var death_mid = Math.round((death_max + death_min) / 22);
-        var fills_properties = {};
-        fills_properties[death_min] = bubbleScale(death_min);
-        fills_properties[death_mid] = bubbleScale(death_mid);
-        fills_properties[death_max] = bubbleScale(death_max);
+        var deathMin = deathsExtent[0];
+        var deathMax = deathsExtent[1];
+        var deathMid = Math.round((deathMin + deathMax)/2);
+
+        var fillsProperties = {};
+        fillsProperties[deathMin] = bubbleScale(deathMin);
+        fillsProperties[deathMid] = bubbleScale(deathMid);
+        fillsProperties[deathMax] = bubbleScale(deathMax);
+
         var map = new Datamap({
           element: document.getElementById('container'),
           scope: 'usa',
-          fills: fills_properties
+          fills: fillsProperties
         });
 
-        var default_week_number = 1;
-        var week_1_data = fluData2014.by_city_and_week_of(default_week_number);
-        setTitle(default_week_number, fluData2014);
-        setBubbles(map, week_1_data, bubbleScale);
-        buildSelector(fluData2014, map, bubbleScale);
-
-        var legend_properties = {};
-        legend_properties[death_min] = death_min;
-        legend_properties[death_mid] = death_mid;
-        legend_properties[death_max] = death_max;
+        var legendProperties = {};
+        legendProperties[deathMin] = deathMin;
+        legendProperties[deathMid] = deathMid;
+        legendProperties[deathMax] = deathMax;
         map.legend({
           legendTitle: "Deaths Per City",
-          labels: legend_properties
+          labels: legendProperties
         });
+
+        var defaultWeekNumber = 1;
+        var week1Data = fluData2014.byCityAndWeekOf(defaultWeekNumber);
+        setTitle(defaultWeekNumber, fluData2014);
+        setBubbles(map, week1Data, bubbleScale);
+        buildSelector(fluData2014, map, bubbleScale);
+
       });
     </script>
   </body>
