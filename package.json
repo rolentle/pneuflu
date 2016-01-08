@@ -1,0 +1,30 @@
+{
+  "name": "pneuflu",
+  "version": "0.0.1",
+  "description": "[PneuFlu](rolentle.github.io/pneuflu) is a data visualization of deaths caused by pneumonia and influenza at city and week level for 2014. Data From the CDC can be found [here](https://data.cdc.gov/MMWR/TABLE-III-Deaths-in-122-U-S-cities/qpap-3u8w).  More information about influenza can be found at the CDC's page for [Flu Activity & Surveillance](http://www.cdc.gov/flu/weekly/fluactivitysurv.htm).",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify -t [babelify] src/index.js > build/bundle.js",
+    "build-uglify": "browserify -t [babelify] src/index.js | uglifyjs -c > build/bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rolentle/pneuflu.git"
+  },
+  "author": "Rolen Le",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rolentle/pneuflu/issues"
+  },
+  "homepage": "https://github.com/rolentle/pneuflu",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.3.13",
+    "babelify": "^7.2.0",
+    "browserify": "^12.0.1",
+    "uglify-js": "^2.6.1"
+  },
+  "dependencies": {
+    "d3": "^4.0.0-alpha.3",
+    "datamaps": "^0.4.2"
+  }
+}
