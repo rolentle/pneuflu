@@ -30703,45 +30703,303 @@ var _datamaps = require('datamaps');
 
 var _datamaps2 = _interopRequireDefault(_datamaps);
 
+var _flu_data = require('./scripts/flu_data');
+
+var _flu_data2 = _interopRequireDefault(_flu_data);
+
+var _title = require('./scripts/title');
+
+var _title2 = _interopRequireDefault(_title);
+
+var _bubbles = require('./scripts/bubbles');
+
+var _bubbles2 = _interopRequireDefault(_bubbles);
+
+var _selector = require('./scripts/selector');
+
+var _selector2 = _interopRequireDefault(_selector);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _d2.default.requestJson('./data_2014.json', function (data) {
-  // var fluData2014 = new fluData(data);
-  // var deathsExtent = fluData2014.deathExtentOfCities();
+  var fluData2014 = new _flu_data2.default(data);
+  var deathsExtent = fluData2014.deathExtentOfCities();
 
-  // var bubbleScale = d3.scale.linear()
-  //   .domain(deathsExtent)
-  //   .range(["white", "red"]);
+  var bubbleScale = _d2.default.scaleLinear().domain(deathsExtent).range(["white", "red"]);
 
-  //   var deathMin = deathsExtent[0];
-  //   var deathMax = deathsExtent[1];
-  //   var deathMid = Math.round((deathMin + deathMax)/2);
+  var deathMin = deathsExtent[0];
+  var deathMax = deathsExtent[1];
+  var deathMid = Math.round((deathMin + deathMax) / 2);
 
-  //   var fillsProperties = {};
-  //   fillsProperties[deathMin] = bubbleScale(deathMin);
-  //   fillsProperties[deathMid] = bubbleScale(deathMid);
-  //   fillsProperties[deathMax] = bubbleScale(deathMax);
+  var fillsProperties = {};
+  fillsProperties[deathMin] = bubbleScale(deathMin);
+  fillsProperties[deathMid] = bubbleScale(deathMid);
+  fillsProperties[deathMax] = bubbleScale(deathMax);
 
-  //   var map = new Datamap({
-  //     element: document.getElementById('container'),
-  //     scope: 'usa',
-  //     fills: fillsProperties
-  //   });
+  var map = new _datamaps2.default({
+    element: document.getElementById('container'),
+    scope: 'usa',
+    fills: fillsProperties
+  });
 
-  //   var legendProperties = {};
-  //   legendProperties[deathMin] = deathMin;
-  //   legendProperties[deathMid] = deathMid;
-  //   legendProperties[deathMax] = deathMax;
-  //   map.legend({
-  //     legendTitle: "Deaths Per City",
-  //     labels: legendProperties
-  //   });
+  var legendProperties = {};
+  legendProperties[deathMin] = deathMin;
+  legendProperties[deathMid] = deathMid;
+  legendProperties[deathMax] = deathMax;
+  map.legend({
+    legendTitle: "Deaths Per City",
+    labels: legendProperties
+  });
 
-  //   var defaultWeekNumber = 1;
-  //   var week1Data = fluData2014.byCityAndWeekOf(defaultWeekNumber);
-  //   setTitle(defaultWeekNumber, fluData2014);
-  //   setBubbles(map, week1Data, bubbleScale);
-  //   buildSelector(fluData2014, map, bubbleScale);
+  var defaultWeekNumber = 1;
+  var week1Data = fluData2014.byCityAndWeekOf(defaultWeekNumber);
+  new _title2.default(defaultWeekNumber, fluData2014).render();
+  new _bubbles2.default().set(map, week1Data, bubbleScale);
+  new _selector2.default().render(fluData2014, map, bubbleScale);
 });
 
-},{"d3":1,"datamaps":2}]},{},[5]);
+},{"./scripts/bubbles":6,"./scripts/flu_data":7,"./scripts/selector":8,"./scripts/title":9,"d3":1,"datamaps":2}],6:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _d = require("d3");
+
+var _d2 = _interopRequireDefault(_d);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Bubbles = function () {
+  function Bubbles() {
+    _classCallCheck(this, Bubbles);
+  }
+
+  _createClass(Bubbles, [{
+    key: "set",
+    value: function set(datamap, data, scale) {
+      var _this = this;
+
+      var bubble_data = this.buildBubbleData(data, scale);
+      datamap.bubbles(bubble_data, {
+        popupTemplate: function popupTemplate(geo, datum) {
+          return _this.hoverTemplate(datum);
+        }
+      });
+      _d2.default.selectAll("circle.datamaps-bubble").attr("fill", function (datum) {
+        return datum.fill;
+      });
+    }
+  }, {
+    key: "buildBubbleData",
+    value: function buildBubbleData(data, scale) {
+      return data.map(function (datum) {
+        var bubble = {
+          longitude: datum.location_1.longitude,
+          latitude: datum.location_1.latitude,
+          reporting_area: datum.reporting_area,
+          radius: 10,
+          all_causes_by_age_years_lt_1: datum.all_causes_by_age_years_lt_1,
+          all_causes_by_age_years_1_24: datum.all_causes_by_age_years_1_24,
+          all_causes_by_age_years_25_44: datum.all_causes_by_age_years_25_44,
+          all_causes_by_age_years_45_64: datum.all_causes_by_age_years_45_64,
+          all_causes_by_age_years_65: datum.all_causes_by_age_years_65,
+          all_causes_by_age_years_all_ages: datum.all_causes_by_age_years_all_ages,
+          fill: scale(datum.all_causes_by_age_years_all_ages)
+        };
+        return bubble;
+      });
+    }
+  }, {
+    key: "hoverTemplate",
+    value: function hoverTemplate(datum) {
+      return ['<div class="hoverinfo">' + datum.reporting_area, '<br/>Deaths under 1 years old: ' + datum.all_causes_by_age_years_lt_1, '<br/>Deaths between 1 and 24: ' + datum.all_causes_by_age_years_1_24, '<br/>Deaths between 25 and 44: ' + datum.all_causes_by_age_years_25_44, '<br/>Deaths between 45 and 64: ' + datum.all_causes_by_age_years_45_64, '<br/>Deaths over 65 years old: ' + datum.all_causes_by_age_years_65, '<br/>Total deaths: ' + datum.all_causes_by_age_years_all_ages, '</div>'].join('');
+    }
+  }]);
+
+  return Bubbles;
+}();
+
+exports.default = Bubbles;
+
+},{"d3":1}],7:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _d = require("d3");
+
+var _d2 = _interopRequireDefault(_d);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var fluData = function () {
+  function fluData(dataSet) {
+    _classCallCheck(this, fluData);
+
+    this.dataSet = dataSet;
+  }
+
+  _createClass(fluData, [{
+    key: "isCity",
+    value: function isCity(datum) {
+      return datum.reporting_area.indexOf(",") !== -1 && datum.location_1 && datum.location_1.longitude && datum.location_1.latitude;
+    }
+  }, {
+    key: "byCity",
+    value: function byCity() {
+      var _this = this;
+      return this.dataSet.filter(function (datum) {
+        return _this.isCity(datum);
+      });
+    }
+  }, {
+    key: "byCityAndWeekOf",
+    value: function byCityAndWeekOf(weekNumber) {
+      return this.byCity().filter(function (datum) {
+        return Number(datum.mmwr_week) === Number(weekNumber) && !datum.all_causes_by_age_years_lt_1_flag;
+      });
+    }
+  }, {
+    key: "weeksExtent",
+    value: function weeksExtent() {
+      return _d2.default.extent(this.dataSet.map(function (datum) {
+        return Number(datum.mmwr_week);
+      }));
+    }
+  }, {
+    key: "deathExtentOfCities",
+    value: function deathExtentOfCities() {
+      return _d2.default.extent(this.byCity(), function (datum) {
+        return Number(datum.all_causes_by_age_years_all_ages);
+      });
+    }
+  }, {
+    key: "allDeathsWeekOf",
+    value: function allDeathsWeekOf(weekNumber) {
+      var weeklyDeath = this.byCityAndWeekOf(weekNumber).map(function (datum) {
+        return Number(datum.all_causes_by_age_years_all_ages);
+      });
+      return weeklyDeath.reduce(function (prev, cur, i, arry) {
+        return prev + cur;
+      });
+    }
+  }]);
+
+  return fluData;
+}();
+
+;
+
+exports.default = fluData;
+
+},{"d3":1}],8:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _d = require('d3');
+
+var _d2 = _interopRequireDefault(_d);
+
+var _title = require('./title');
+
+var _title2 = _interopRequireDefault(_title);
+
+var _bubbles = require('./bubbles');
+
+var _bubbles2 = _interopRequireDefault(_bubbles);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Selector = function () {
+  function Selector() {
+    _classCallCheck(this, Selector);
+  }
+
+  _createClass(Selector, [{
+    key: 'render',
+    value: function render(dataSet, dataMap, scale) {
+      var _this2 = this;
+
+      var _this = this;
+      var rangeSelect = _d2.default.select("#range_selector").append("input").attr("type", "range").attr("id", "week_number");
+      var weeks = dataSet.weeksExtent();
+
+      rangeSelect.attr("min", weeks[0]).attr("max", weeks[1]).attr("value", weeks[0]);
+
+      rangeSelect.on("change", function () {
+        _this.updateElements(dataSet, dataMap, scale, Number(_this2.value));
+      });
+    }
+  }, {
+    key: 'updateElements',
+    value: function updateElements(dataSet, dataMap, scale, weekNumber) {
+      new _title2.default(weekNumber, dataSet).render();
+      var weeklyData = dataSet.byCityAndWeekOf(weekNumber);
+      new _bubbles2.default().set(dataMap, weeklyData, scale);
+    }
+  }]);
+
+  return Selector;
+}();
+
+exports.default = Selector;
+
+},{"./bubbles":6,"./title":9,"d3":1}],9:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _d = require("d3");
+
+var _d2 = _interopRequireDefault(_d);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Title = function () {
+  function Title(weekNumber, dataSet) {
+    _classCallCheck(this, Title);
+
+    this.weekNumber = weekNumber;
+    this.dataSet = dataSet;
+  }
+
+  _createClass(Title, [{
+    key: "render",
+    value: function render() {
+      _d2.default.select("#week_title").text(["Week", this.weekNumber, "Total Deaths:", this.dataSet.allDeathsWeekOf(this.weekNumber)].join(" "));
+    }
+  }]);
+
+  return Title;
+}();
+
+;
+
+exports.default = Title;
+
+},{"d3":1}]},{},[5]);

@@ -1,46 +1,51 @@
-function fluData(dataSet) {
-  this.dataSet = dataSet;
+import d3 from 'd3';
 
-  this.isCity = function(datum) {
+class fluData {
+  constructor(dataSet) {
+    this.dataSet = dataSet;
+  };
+
+  isCity(datum) {
     return datum.reporting_area.indexOf(",") !== -1 &&
       datum.location_1 &&
       datum.location_1.longitude &&
       datum.location_1.latitude;
   };
 
-  this.byCity = function() {
-    var _this = this;
-    return dataSet.filter(function(datum) {
+  byCity() {
+    let _this = this;
+    return this.dataSet.filter( (datum) => {
       return _this.isCity(datum);
     });
   };
 
-  this.byCityAndWeekOf = function(weekNumber) {
-    return this.byCity().filter(function(datum) {
+  byCityAndWeekOf(weekNumber) {
+    return this.byCity().filter( (datum) => {
       return (Number(datum.mmwr_week) === Number(weekNumber)) &&
         !datum.all_causes_by_age_years_lt_1_flag;
     });
   };
 
-  this.weeksExtent = function() {
-    return d3.extent(this.dataSet.map(function(datum) {
+  weeksExtent() {
+    return d3.extent(this.dataSet.map((datum) => {
       return Number(datum.mmwr_week);
     }));
   };
 
-  this.deathExtentOfCities = function() {
-    return d3.extent(this.byCity(), function(datum) {
+  deathExtentOfCities() {
+    return d3.extent(this.byCity(), (datum) => {
           return Number(datum.all_causes_by_age_years_all_ages);
     });
   };
 
-  this.allDeathsWeekOf = function(weekNumber) {
-    var weeklyDeath = this.byCityAndWeekOf(weekNumber).map(function(datum) {
+  allDeathsWeekOf(weekNumber) {
+    let weeklyDeath = this.byCityAndWeekOf(weekNumber).map( (datum) => {
       return Number(datum.all_causes_by_age_years_all_ages);
     });
-    return weeklyDeath.reduce(function(prev, cur, i, arry) {
+    return weeklyDeath.reduce((prev, cur, i, arry) => {
       return prev + cur;
     });
   };
 };
 
+export default fluData;
