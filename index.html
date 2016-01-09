@@ -1,9 +1,6 @@
 <html>
   <head>
     <title>PneuFlu</title>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-    <script src="src/scripts/datamaps.usa.min.js"></script>
     <script src="src/scripts/bubble_builder.js"></script>
     <script src="src/scripts/element_builder.js"></script>
     <script src="src/scripts/flu_data.js"></script>
@@ -13,47 +10,8 @@
     <h2 id="week_title"></h2>
     <span id="range_selector"></span>
     <div id="container" style="position: relative; width: 1000px; height: 600px;"></div>
+    <script src="build/bundle.js"></script>
     <script>
-
-      d3.json('./data_2014.json',function(data){
-        var fluData2014 = new fluData(data);
-        var deathsExtent = fluData2014.deathExtentOfCities();
-
-        var bubbleScale = d3.scale.linear()
-          .domain(deathsExtent)
-          .range(["white", "red"]);
-
-        var deathMin = deathsExtent[0];
-        var deathMax = deathsExtent[1];
-        var deathMid = Math.round((deathMin + deathMax)/2);
-
-        var fillsProperties = {};
-        fillsProperties[deathMin] = bubbleScale(deathMin);
-        fillsProperties[deathMid] = bubbleScale(deathMid);
-        fillsProperties[deathMax] = bubbleScale(deathMax);
-
-        var map = new Datamap({
-          element: document.getElementById('container'),
-          scope: 'usa',
-          fills: fillsProperties
-        });
-
-        var legendProperties = {};
-        legendProperties[deathMin] = deathMin;
-        legendProperties[deathMid] = deathMid;
-        legendProperties[deathMax] = deathMax;
-        map.legend({
-          legendTitle: "Deaths Per City",
-          labels: legendProperties
-        });
-
-        var defaultWeekNumber = 1;
-        var week1Data = fluData2014.byCityAndWeekOf(defaultWeekNumber);
-        setTitle(defaultWeekNumber, fluData2014);
-        setBubbles(map, week1Data, bubbleScale);
-        buildSelector(fluData2014, map, bubbleScale);
-
-      });
     </script>
   </body>
 </html>
