@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "watchify -t [babelify] src/index.js -o  build/bundle.js -v",
-    "build-uglify": "browserify -t [babelify] src/index.js | uglifyjs -c > build/bundle.js"
+    "build-uglify": "browserify -t [babelify] src/index.js | uglifyjs -c > build/bundle.js",
+    "test": "mochify --transform babelify test/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "babelify": "^7.2.0",
     "browserify": "^12.0.1",
     "jshint": "^2.9.1-rc2",
+    "mochify": "^2.14.3",
     "uglify-js": "^2.6.1",
     "watchify": "^3.6.1"
   },
