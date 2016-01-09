@@ -4,7 +4,7 @@ class Title {
   constructor(weekNumber, dataSet) {
     this.weekNumber = weekNumber;
     this.dataSet = dataSet;
-  };
+  }
 
   render() {
     d3.select("#week_title").text(
@@ -14,7 +14,7 @@ class Title {
         "Total Deaths:",
         this.dataSet.allDeathsWeekOf(this.weekNumber)
       ].join(" "));
-  };
-};
+  }
+}
 
 export default Title;

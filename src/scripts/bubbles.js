@@ -2,7 +2,7 @@ import d3 from 'd3';
 
 class Bubbles {
   set(datamap, data, scale) {
-    let bubble_data = this.buildBubbleData(data, scale)
+    let bubble_data = this.buildBubbleData(data, scale);
     datamap.bubbles(bubble_data,{
       popupTemplate: (geo, datum) => {
         return this.hoverTemplate(datum);
@@ -12,7 +12,7 @@ class Bubbles {
     .attr("fill", (datum) => {
       return datum.fill;
     });
-  };
+  }
 
   buildBubbleData(data, scale) {
     return data.map( (datum) => {
@@ -28,10 +28,10 @@ class Bubbles {
         all_causes_by_age_years_65 : datum.all_causes_by_age_years_65,
         all_causes_by_age_years_all_ages : datum.all_causes_by_age_years_all_ages,
         fill: scale(datum.all_causes_by_age_years_all_ages)
-      }
+      };
       return bubble;
     });
-  };
+  }
 
   hoverTemplate(datum) {
     return ['<div class="hoverinfo">' +  datum.reporting_area,
@@ -42,7 +42,7 @@ class Bubbles {
       '<br/>Deaths over 65 years old: ' +  datum.all_causes_by_age_years_65,
       '<br/>Total deaths: ' +  datum.all_causes_by_age_years_all_ages,
       '</div>'].join('');
-  };
+  }
 }
 
 export default Bubbles;

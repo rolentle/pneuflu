@@ -27,4 +27,4 @@ class Selector {
   }
 }
 
-export default Selector
+export default Selector;
