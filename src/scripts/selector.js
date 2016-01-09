@@ -15,7 +15,7 @@ class Selector {
     .attr("max", weeks[1])
     .attr("value", weeks[0]);
 
-    rangeSelect.on("change", () => {
+    rangeSelect.on("change", function() {
       _this.updateElements(dataSet, dataMap, scale, Number(this.value));
     });
   }

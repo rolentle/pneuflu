@@ -30935,8 +30935,6 @@ var Selector = function () {
   _createClass(Selector, [{
     key: 'render',
     value: function render(dataSet, dataMap, scale) {
-      var _this2 = this;
-
       var _this = this;
       var rangeSelect = _d2.default.select("#range_selector").append("input").attr("type", "range").attr("id", "week_number");
       var weeks = dataSet.weeksExtent();
@@ -30944,7 +30942,7 @@ var Selector = function () {
       rangeSelect.attr("min", weeks[0]).attr("max", weeks[1]).attr("value", weeks[0]);
 
       rangeSelect.on("change", function () {
-        _this.updateElements(dataSet, dataMap, scale, Number(_this2.value));
+        _this.updateElements(dataSet, dataMap, scale, Number(this.value));
       });
     }
   }, {
