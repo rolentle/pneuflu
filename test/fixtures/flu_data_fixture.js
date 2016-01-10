@@ -47,8 +47,11 @@ var fluDataFixture = [
       "longitude" : "-73.19126911399962",
       "latitude" : "41.1818843100005",
       "human_address" : "{\"address\":\"\",\"city\":\"Bridgeport, CT\",\"state\":\"\",\"zip\":\"\"}"
-    }
+    },
+    "mmwr_week" : "2",
+    "all_causes_by_age_years_25_44" : "2"
   }
+
 ];
 
 export default fluDataFixture;

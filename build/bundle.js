@@ -30758,7 +30758,7 @@ _d2.default.requestJson('./data_2014.json', function (data) {
   new _selector2.default().render(fluData2014, map, bubbleScale);
 });
 
-},{"./scripts/bubbles":6,"./scripts/flu_data":7,"./scripts/selector":8,"./scripts/title":9,"d3":1,"datamaps":2}],6:[function(require,module,exports){
+},{"./scripts/bubbles":6,"./scripts/flu_data":7,"./scripts/selector":9,"./scripts/title":10,"d3":1,"datamaps":2}],6:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -30799,19 +30799,19 @@ var Bubbles = function () {
   }, {
     key: "buildBubbleData",
     value: function buildBubbleData(data, scale) {
-      return data.map(function (datum) {
+      return data.map(function (record) {
         var bubble = {
-          longitude: datum.location_1.longitude,
-          latitude: datum.location_1.latitude,
-          reporting_area: datum.reporting_area,
+          longitude: record.location.longitude,
+          latitude: record.location.latitude,
+          reporting_area: record.reporting_area,
           radius: 10,
-          all_causes_by_age_years_lt_1: datum.all_causes_by_age_years_lt_1,
-          all_causes_by_age_years_1_24: datum.all_causes_by_age_years_1_24,
-          all_causes_by_age_years_25_44: datum.all_causes_by_age_years_25_44,
-          all_causes_by_age_years_45_64: datum.all_causes_by_age_years_45_64,
-          all_causes_by_age_years_65: datum.all_causes_by_age_years_65,
-          all_causes_by_age_years_all_ages: datum.all_causes_by_age_years_all_ages,
-          fill: scale(datum.all_causes_by_age_years_all_ages)
+          deaths_ages_0_1: record.deaths.ages_0_1,
+          deaths_ages_1_24: record.deaths.ages_1_24,
+          deaths_ages_25_44: record.deaths.ages_25_44,
+          deaths_ages_45_64: record.deaths.ages_45_64,
+          deaths_ages_65_999: record.deaths.ages_65_999,
+          deaths_total: record.deaths.total,
+          fill: scale(record.deaths.total)
         };
         return bubble;
       });
@@ -30819,7 +30819,7 @@ var Bubbles = function () {
   }, {
     key: "hoverTemplate",
     value: function hoverTemplate(datum) {
-      return ['<div class="hoverinfo">' + datum.reporting_area, '<br/>Deaths under 1 years old: ' + datum.all_causes_by_age_years_lt_1, '<br/>Deaths between 1 and 24: ' + datum.all_causes_by_age_years_1_24, '<br/>Deaths between 25 and 44: ' + datum.all_causes_by_age_years_25_44, '<br/>Deaths between 45 and 64: ' + datum.all_causes_by_age_years_45_64, '<br/>Deaths over 65 years old: ' + datum.all_causes_by_age_years_65, '<br/>Total deaths: ' + datum.all_causes_by_age_years_all_ages, '</div>'].join('');
+      return ['<div class="hoverinfo">' + datum.reporting_area, '<br/>Deaths under 1 years old: ' + datum.deaths_ages_0_1, '<br/>Deaths between 1 and 24: ' + datum.deaths_ages_1_24, '<br/>Deaths between 25 and 44: ' + datum.deaths_ages_25_44, '<br/>Deaths between 45 and 64: ' + datum.deaths_ages_45_64, '<br/>Deaths over 65 years old: ' + datum.deaths_ages_65_999, '<br/>Total deaths: ' + datum.deaths_total, '</div>'].join('');
     }
   }]);
 
@@ -30829,7 +30829,7 @@ var Bubbles = function () {
 exports.default = Bubbles;
 
 },{"d3":1}],7:[function(require,module,exports){
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -30837,9 +30837,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _d = require("d3");
+var _d = require('d3');
 
 var _d2 = _interopRequireDefault(_d);
+
+var _weekly_flu_record = require('./models/weekly_flu_record');
+
+var _weekly_flu_record2 = _interopRequireDefault(_weekly_flu_record);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30849,50 +30853,41 @@ var fluData = function () {
   function fluData(dataSet) {
     _classCallCheck(this, fluData);
 
-    this.dataSet = this.cityOnly(dataSet);
+    this.dataSet = dataSet.map(function (record) {
+      return new _weekly_flu_record2.default(record);
+    }).filter(function (record) {
+      return record.type() == "city";
+    });
   }
 
   _createClass(fluData, [{
-    key: "isCity",
-    value: function isCity(datum) {
-      return datum.reporting_area.indexOf(",") !== -1 && datum.location_1 && datum.location_1.longitude && datum.location_1.latitude;
-    }
-  }, {
-    key: "cityOnly",
-    value: function cityOnly(dataSet) {
-      var _this = this;
-      return dataSet.filter(function (datum) {
-        return _this.isCity(datum);
-      });
-    }
-  }, {
-    key: "byCityAndWeekOf",
+    key: 'byCityAndWeekOf',
     value: function byCityAndWeekOf(weekNumber) {
-      return this.dataSet.filter(function (datum) {
-        return Number(datum.mmwr_week) === Number(weekNumber) && !datum.all_causes_by_age_years_lt_1_flag;
+      var week = Number(weekNumber);
+      return this.dataSet.filter(function (record) {
+        return record.week === week;
       });
     }
   }, {
-    key: "weeksExtent",
+    key: 'weeksExtent',
     value: function weeksExtent() {
-      return _d2.default.extent(this.dataSet.map(function (datum) {
-        return Number(datum.mmwr_week);
+      return _d2.default.extent(this.dataSet.map(function (record) {
+        return record.week;
       }));
     }
   }, {
-    key: "deathExtentOfCities",
+    key: 'deathExtentOfCities',
     value: function deathExtentOfCities() {
-      return _d2.default.extent(this.dataSet, function (datum) {
-        return Number(datum.all_causes_by_age_years_all_ages);
-      });
+      return _d2.default.extent(this.dataSet.map(function (record) {
+        return record.deaths.total;
+      }));
     }
   }, {
-    key: "allDeathsWeekOf",
+    key: 'allDeathsWeekOf',
     value: function allDeathsWeekOf(weekNumber) {
-      var weeklyDeath = this.byCityAndWeekOf(weekNumber).map(function (datum) {
-        return Number(datum.all_causes_by_age_years_all_ages);
-      });
-      return weeklyDeath.reduce(function (prev, cur) {
+      return this.byCityAndWeekOf(weekNumber).map(function (record) {
+        return record.deaths.total;
+      }).reduce(function (prev, cur) {
         return prev + cur;
       });
     }
@@ -30903,7 +30898,69 @@ var fluData = function () {
 
 exports.default = fluData;
 
-},{"d3":1}],8:[function(require,module,exports){
+},{"./models/weekly_flu_record":8,"d3":1}],8:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var WeeklyFluRecord = function () {
+  function WeeklyFluRecord(record) {
+    _classCallCheck(this, WeeklyFluRecord);
+
+    this.year = Number(record.mmwr_year);
+    this.week = Number(record.mmwr_week);
+    this.deaths = this.setDeaths(record);
+    this.reporting_area = record.reporting_area;
+    if (record.location_1) {
+      this.location = {
+        longitude: record.location_1.longitude,
+        latitude: record.location_1.latitude
+      };
+    } else {
+      this.location = {};
+    }
+  }
+
+  _createClass(WeeklyFluRecord, [{
+    key: "setDeaths",
+    value: function setDeaths(record) {
+      return {
+        total: Number(record.all_causes_by_age_years_all_ages) || 0,
+        ages_0_1: Number(record.all_causes_by_age_years_lt_1) || 0,
+        ages_1_24: Number(record.all_causes_by_age_years_1_24) || 0,
+        ages_25_44: Number(record.all_causes_by_age_years_25_44) || 0,
+        ages_45_64: Number(record.all_causes_by_age_years_45_64) || 0,
+        ages_65_999: Number(record.all_causes_by_age_years_65) || 0
+      };
+    }
+  }, {
+    key: "type",
+    value: function type() {
+      if (this.isCity()) {
+        return "city";
+      } else {
+        return "region";
+      }
+    }
+  }, {
+    key: "isCity",
+    value: function isCity() {
+      return !!(this.reporting_area.indexOf(",") !== -1 && this.location.longitude && this.location.latitude);
+    }
+  }]);
+
+  return WeeklyFluRecord;
+}();
+
+exports.default = WeeklyFluRecord;
+
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -30960,7 +31017,7 @@ var Selector = function () {
 
 exports.default = Selector;
 
-},{"./bubbles":6,"./title":9,"d3":1}],9:[function(require,module,exports){
+},{"./bubbles":6,"./title":10,"d3":1}],10:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();

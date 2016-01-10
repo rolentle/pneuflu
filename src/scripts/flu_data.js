@@ -1,46 +1,30 @@
 import d3 from 'd3';
+import WeeklyFluRecord from './models/weekly_flu_record';
 
 class fluData {
   constructor(dataSet) {
-    this.dataSet = this.cityOnly(dataSet);
-  }
-
-  isCity(datum) {
-    return datum.reporting_area.indexOf(",") !== -1 &&
-      datum.location_1 &&
-      datum.location_1.longitude &&
-      datum.location_1.latitude;
-  }
-
-  cityOnly(dataSet) {
-    let _this = this;
-    return dataSet.filter( datum => _this.isCity(datum));
+    this.dataSet = dataSet
+    .map((record) => new WeeklyFluRecord(record))
+    .filter((record) => record.type() == "city");
   }
 
   byCityAndWeekOf(weekNumber) {
-    return this.dataSet.filter( (datum) => {
-      return (Number(datum.mmwr_week) === Number(weekNumber)) &&
-        !datum.all_causes_by_age_years_lt_1_flag;
-    });
+    let week = Number(weekNumber);
+    return this.dataSet.filter( (record) => record.week === week);
   }
 
   weeksExtent() {
-    return d3.extent(this.dataSet.map((datum) => {
-      return Number(datum.mmwr_week);
-    }));
+    return d3.extent(this.dataSet.map((record) => record.week));
   }
 
   deathExtentOfCities() {
-    return d3.extent(this.dataSet, (datum) => {
-          return Number(datum.all_causes_by_age_years_all_ages);
-    });
+    return d3.extent(this.dataSet.map((record) => record.deaths.total));
   }
 
   allDeathsWeekOf(weekNumber) {
-    let weeklyDeath = this.byCityAndWeekOf(weekNumber).map( (datum) => {
-      return Number(datum.all_causes_by_age_years_all_ages);
-    });
-    return weeklyDeath.reduce((prev, cur) => prev + cur );
+    return this.byCityAndWeekOf(weekNumber)
+    .map( (record) => record.deaths.total )
+    .reduce( (prev, cur) => prev + cur );
   }
 }
 
