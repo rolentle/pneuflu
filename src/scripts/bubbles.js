@@ -3,15 +3,14 @@ import d3 from 'd3';
 class Bubbles {
   set(datamap, data, scale) {
     let bubble_data = this.buildBubbleData(data, scale);
+
     datamap.bubbles(bubble_data,{
       popupTemplate: (geo, datum) => {
         return this.hoverTemplate(datum);
       }
     });
     d3.selectAll("circle.datamaps-bubble")
-    .attr("fill", (datum) => {
-      return datum.fill;
-    });
+    .attr("fill", datum => datum.fill );
   }
 
   buildBubbleData(data, scale) {

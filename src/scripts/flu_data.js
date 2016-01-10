@@ -2,7 +2,7 @@ import d3 from 'd3';
 
 class fluData {
   constructor(dataSet) {
-    this.dataSet = dataSet;
+    this.dataSet = this.cityOnly(dataSet);
   }
 
   isCity(datum) {
@@ -12,15 +12,13 @@ class fluData {
       datum.location_1.latitude;
   }
 
-  byCity() {
+  cityOnly(dataSet) {
     let _this = this;
-    return this.dataSet.filter( (datum) => {
-      return _this.isCity(datum);
-    });
+    return dataSet.filter( datum => _this.isCity(datum));
   }
 
   byCityAndWeekOf(weekNumber) {
-    return this.byCity().filter( (datum) => {
+    return this.dataSet.filter( (datum) => {
       return (Number(datum.mmwr_week) === Number(weekNumber)) &&
         !datum.all_causes_by_age_years_lt_1_flag;
     });
@@ -33,7 +31,7 @@ class fluData {
   }
 
   deathExtentOfCities() {
-    return d3.extent(this.byCity(), (datum) => {
+    return d3.extent(this.dataSet, (datum) => {
           return Number(datum.all_causes_by_age_years_all_ages);
     });
   }
@@ -42,9 +40,7 @@ class fluData {
     let weeklyDeath = this.byCityAndWeekOf(weekNumber).map( (datum) => {
       return Number(datum.all_causes_by_age_years_all_ages);
     });
-    return weeklyDeath.reduce((prev, cur, i, arry) => {
-      return prev + cur;
-    });
+    return weeklyDeath.reduce((prev, cur) => prev + cur );
   }
 }
 

@@ -30786,6 +30786,7 @@ var Bubbles = function () {
       var _this = this;
 
       var bubble_data = this.buildBubbleData(data, scale);
+
       datamap.bubbles(bubble_data, {
         popupTemplate: function popupTemplate(geo, datum) {
           return _this.hoverTemplate(datum);
@@ -30848,7 +30849,7 @@ var fluData = function () {
   function fluData(dataSet) {
     _classCallCheck(this, fluData);
 
-    this.dataSet = dataSet;
+    this.dataSet = this.cityOnly(dataSet);
   }
 
   _createClass(fluData, [{
@@ -30857,17 +30858,17 @@ var fluData = function () {
       return datum.reporting_area.indexOf(",") !== -1 && datum.location_1 && datum.location_1.longitude && datum.location_1.latitude;
     }
   }, {
-    key: "byCity",
-    value: function byCity() {
+    key: "cityOnly",
+    value: function cityOnly(dataSet) {
       var _this = this;
-      return this.dataSet.filter(function (datum) {
+      return dataSet.filter(function (datum) {
         return _this.isCity(datum);
       });
     }
   }, {
     key: "byCityAndWeekOf",
     value: function byCityAndWeekOf(weekNumber) {
-      return this.byCity().filter(function (datum) {
+      return this.dataSet.filter(function (datum) {
         return Number(datum.mmwr_week) === Number(weekNumber) && !datum.all_causes_by_age_years_lt_1_flag;
       });
     }
@@ -30881,7 +30882,7 @@ var fluData = function () {
   }, {
     key: "deathExtentOfCities",
     value: function deathExtentOfCities() {
-      return _d2.default.extent(this.byCity(), function (datum) {
+      return _d2.default.extent(this.dataSet, function (datum) {
         return Number(datum.all_causes_by_age_years_all_ages);
       });
     }
@@ -30891,7 +30892,7 @@ var fluData = function () {
       var weeklyDeath = this.byCityAndWeekOf(weekNumber).map(function (datum) {
         return Number(datum.all_causes_by_age_years_all_ages);
       });
-      return weeklyDeath.reduce(function (prev, cur, i, arry) {
+      return weeklyDeath.reduce(function (prev, cur) {
         return prev + cur;
       });
     }
