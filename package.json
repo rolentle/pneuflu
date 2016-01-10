@@ -6,7 +6,7 @@
   "scripts": {
     "build": "watchify -t [babelify] src/index.js -o  build/bundle.js -v",
     "build-uglify": "browserify -t [babelify] src/index.js | uglifyjs -c > build/bundle.js",
-    "test": "mochify --transform babelify test/**/*.js"
+    "test": "mochify --transform babelify test/scripts/**/*.js"
   },
   "repository": {
     "type": "git",
